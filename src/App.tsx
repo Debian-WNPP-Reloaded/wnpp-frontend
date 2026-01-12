@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { Route, Routes } from "react-router-dom";
 import "./App.css";
+import Packages from "./pages/Packages";
 
 function App() {
-  const [count, setCount] = useState(0);
-
-  return <h1 className="text-3xl font-bold underline">Hello world!</h1>;
+  return (
+    <Routes>
+      <Route path="/" element={<Packages />} />
+    </Routes>
+  );
 }
 
 export default App;
