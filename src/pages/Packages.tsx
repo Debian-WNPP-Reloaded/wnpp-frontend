@@ -173,11 +173,11 @@ export default function Packages() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <img
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6960528a8d3c9404917bd164/72a56a8df_Untitled-removebg-preview.png"
+              src="/debian-logo.svg"
               alt="Debian Logo"
-              className="w-16 h-16"
+              className="w-24 h-24"
             />
             <div>
               <h1 className="text-4xl font-bold tracking-tight">
