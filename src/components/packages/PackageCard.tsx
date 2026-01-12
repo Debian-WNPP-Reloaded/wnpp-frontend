@@ -92,7 +92,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
                 {daysSinceArrival !== null && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center gap-1.5 cursor-help">
+                      <div className="flex items-center gap-1.5">
                         <Calendar className="w-4 h-4" />
                         <span>{daysSinceArrival} days</span>
                       </div>
@@ -105,7 +105,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1.5 cursor-help">
+                    <div className="flex items-center gap-1.5">
                       <Download className="w-4 h-4" />
                       <span>{pkg.installs?.toLocaleString() || "N/A"}</span>
                     </div>
@@ -117,7 +117,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1.5 cursor-help">
+                    <div className="flex items-center gap-1.5">
                       <Users className="w-4 h-4" />
                       <span
                         className={
@@ -136,7 +136,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
                 {pkg.last_modified && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center gap-1.5 cursor-help">
+                      <div className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4" />
                         <span>
                           {Math.floor(
