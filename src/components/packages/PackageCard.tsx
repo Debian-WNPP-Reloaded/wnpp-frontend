@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Users, Calendar, Download, Package, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import type { WnppPackage } from "@/types/wnpp";
 
 const typeColors = {
   RFH: "bg-red-50 text-[#D70A53] border-[#D70A53]",
@@ -15,6 +16,7 @@ const typeColors = {
   RFA: "bg-blue-50 text-blue-700 border-blue-300",
   O: "bg-slate-100 text-slate-700 border-slate-300",
   RFP: "bg-teal-50 text-teal-700 border-teal-300",
+  ITP: "bg-purple-50 text-purple-700 border-purple-300",
 };
 
 const typeLabels = {
@@ -23,6 +25,7 @@ const typeLabels = {
   RFA: "Request for Adoption",
   O: "Orphaned",
   RFP: "Request for Package",
+  ITP: "Intent to Package",
 };
 
 const priorityColors = {
@@ -31,8 +34,27 @@ const priorityColors = {
   low: "border-l-slate-300",
 };
 
-export default function PackageCard({ pkg }) {
+interface PackageCardProps {
+  pkg: WnppPackage;
+}
+
+export default function PackageCard({ pkg }: PackageCardProps) {
   const hasOwner = pkg.owner && pkg.owner !== "nobody";
+
+  // Calculate days since arrival
+  const daysSinceArrival = pkg.arrival
+    ? Math.floor(
+        (new Date().getTime() - new Date(pkg.arrival).getTime()) /
+          (1000 * 60 * 60 * 24)
+      )
+    : null;
+
+  // Determine priority based on installs or type
+  const getPriority = () => {
+    if (pkg.type === "O") return "high"; // Orphaned packages are high priority
+    if (pkg.installs && pkg.installs > 10000) return "medium";
+    return "low";
+  };
 
   return (
     <motion.div
@@ -42,7 +64,7 @@ export default function PackageCard({ pkg }) {
     >
       <Card
         className={`p-6 hover:shadow-md transition-all duration-200 border-l-4 ${
-          priorityColors[pkg.priority]
+          priorityColors[getPriority()]
         } bg-white border border-slate-200`}
       >
         <div className="flex items-start justify-between gap-4">
@@ -50,7 +72,7 @@ export default function PackageCard({ pkg }) {
             <div className="flex items-center gap-3 mb-3">
               <Package className="w-5 h-5 text-[#2B5672] flex-shrink-0" />
               <h3 className="text-lg font-bold text-[#2B5672] truncate">
-                {pkg.project_name}
+                {pkg.source}
               </h3>
               <Badge
                 variant="outline"
@@ -62,28 +84,30 @@ export default function PackageCard({ pkg }) {
             </div>
 
             <p className="text-sm text-slate-600 leading-relaxed mb-4 line-clamp-2">
-              {pkg.description}
+              {pkg.title}
             </p>
 
             <TooltipProvider>
               <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1.5 cursor-help">
-                      <Calendar className="w-4 h-4" />
-                      <span>{pkg.dust_days} days</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Dust (days since last update)</p>
-                  </TooltipContent>
-                </Tooltip>
+                {daysSinceArrival !== null && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1.5 cursor-help">
+                        <Calendar className="w-4 h-4" />
+                        <span>{daysSinceArrival} days</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Days since arrival</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
 
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="flex items-center gap-1.5 cursor-help">
                       <Download className="w-4 h-4" />
-                      <span>{pkg.installs?.toLocaleString() || 0}</span>
+                      <span>{pkg.installs?.toLocaleString() || "N/A"}</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -100,7 +124,7 @@ export default function PackageCard({ pkg }) {
                           hasOwner ? "text-emerald-600" : "text-slate-400"
                         }
                       >
-                        {pkg.owner || "nobody"}
+                        {pkg.owner_name || pkg.owner || "nobody"}
                       </span>
                     </div>
                   </TooltipTrigger>
@@ -109,33 +133,35 @@ export default function PackageCard({ pkg }) {
                   </TooltipContent>
                 </Tooltip>
 
-                {pkg.created_date && (
+                {pkg.last_modified && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center gap-1.5 cursor-help">
                         <Clock className="w-4 h-4" />
                         <span>
                           {Math.floor(
-                            (new Date() - new Date(pkg.created_date)) /
+                            (new Date().getTime() -
+                              new Date(pkg.last_modified).getTime()) /
                               (1000 * 60 * 60 * 24)
                           )}{" "}
-                          days
+                          days ago
                         </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Age (days since reported)</p>
+                      <p>Last modified</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
 
-                {pkg.package_number && (
+                {pkg.bug_id && (
                   <a
-                    href="#"
-                    onClick={(e) => e.preventDefault()}
+                    href={`https://bugs.debian.org/${pkg.bug_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-[#D70A53] hover:text-[#D70A53]/80 hover:underline transition-colors"
                   >
-                    #{pkg.package_number}
+                    #{pkg.bug_id}
                   </a>
                 )}
               </div>

@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+// src/pages/Packages.tsx
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,98 +18,113 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import PackageCard from "../components/packages/PackageCard";
 import FilterPanel from "../components/packages/FilterPanel";
+import { useWnppSearch, useWnppCount } from "../hooks/useWnppSearch";
+import type { WnppType } from "../types/wnpp";
 
 export default function Packages() {
   const [filters, setFilters] = useState({
     search: "",
-    type: "all",
-    ownerStatus: "all",
+    type: "all" as "all" | WnppType | WnppType[],
+    ownerStatus: "all" as "all" | "with" | "without",
   });
 
   const [sortBy, setSortBy] = useState("dust_days_desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  const { data: packages = [], isLoading = false } = {
-    data: [],
-    isLoading: false,
-  }; /*= useQuery({
-    queryKey: ["packages"],
-    queryFn: () => [], //base44.entities.Package.list(),
-  });*/
+  // Map sort value to API parameters
+  const [apiOrder, apiSortOrder] = useMemo(() => {
+    const [field, order] = sortBy.split("_");
+    // Map 'name' to appropriate field if needed, otherwise use dust_days, installs, arrival
+    const orderField = field === "name" ? "dust_days" : field; // API doesn't support name sorting
+    return [
+      orderField as "dust_days" | "installs" | "arrival",
+      order as "asc" | "desc",
+    ];
+  }, [sortBy]);
 
-  const filteredAndSortedPackages = useMemo(() => {
-    let result = [...packages];
+  // Build API params
+  const apiParams = useMemo(() => {
+    const params: any = {
+      limit: itemsPerPage,
+      offset: (currentPage - 1) * itemsPerPage,
+      order: apiOrder,
+    };
 
-    // Apply filters
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      result = result.filter(
-        (pkg) =>
-          pkg.project_name?.toLowerCase().includes(searchLower) ||
-          pkg.description?.toLowerCase().includes(searchLower)
-      );
+      params.q = filters.search;
     }
 
     if (filters.type !== "all") {
-      const types = Array.isArray(filters.type) ? filters.type : [filters.type];
-      if (types.length > 0) {
-        result = result.filter((pkg) => types.includes(pkg.type));
-      }
+      params.type = filters.type;
     }
 
     if (filters.ownerStatus === "with") {
-      result = result.filter((pkg) => pkg.owner && pkg.owner !== "nobody");
+      params.owner = true;
     } else if (filters.ownerStatus === "without") {
-      result = result.filter((pkg) => !pkg.owner || pkg.owner === "nobody");
+      params.owner = false;
     }
 
-    // Apply sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case "dust_days_desc":
-          return (b.dust_days || 0) - (a.dust_days || 0);
-        case "dust_days_asc":
-          return (a.dust_days || 0) - (b.dust_days || 0);
-        case "installs_desc":
-          return (b.installs || 0) - (a.installs || 0);
-        case "installs_asc":
-          return (a.installs || 0) - (b.installs || 0);
-        case "name_asc":
-          return (a.project_name || "").localeCompare(b.project_name || "");
-        case "name_desc":
-          return (b.project_name || "").localeCompare(a.project_name || "");
-        default:
-          return 0;
-      }
-    });
+    return params;
+  }, [
+    filters.search,
+    filters.type,
+    filters.ownerStatus,
+    currentPage,
+    apiOrder,
+  ]);
+
+  // Fetch packages
+  const { data: packages = [], isLoading, error } = useWnppSearch(apiParams);
+
+  // Fetch total count for the current filters
+  const countParams = useMemo(() => {
+    const params: any = {};
+    if (filters.type !== "all") {
+      params.type = filters.type;
+    }
+    if (filters.ownerStatus === "with") {
+      params.owner = true;
+    } else if (filters.ownerStatus === "without") {
+      params.owner = false;
+    }
+    return params;
+  }, [filters.type, filters.ownerStatus]);
+
+  const { data: totalCount = 0 } = useWnppCount(countParams);
+  const { data: withoutOwnerCount = 0 } = useWnppCount({ owner: false });
+
+  // Apply client-side sorting for name (since API doesn't support it) and sort order
+  const sortedPackages = useMemo(() => {
+    let result = [...packages];
+
+    // If sorting by name, do it client-side
+    if (sortBy === "name_asc") {
+      result.sort((a, b) => (a.source || "").localeCompare(b.source || ""));
+    } else if (sortBy === "name_desc") {
+      result.sort((a, b) => (b.source || "").localeCompare(a.source || ""));
+    } else if (apiSortOrder === "asc") {
+      // Reverse for ascending order (API returns descending by default)
+      result.reverse();
+    }
 
     return result;
-  }, [packages, filters, sortBy]);
+  }, [packages, sortBy, apiSortOrder]);
 
   const handleResetFilters = () => {
     setFilters({ search: "", type: "all", ownerStatus: "all" });
     setCurrentPage(1);
   };
 
-  const stats = useMemo(() => {
-    const total = packages.length;
-    const withoutOwner = packages.filter(
-      (p) => !p.owner || p.owner === "nobody"
-    ).length;
-    return { total, withoutOwner };
-  }, [packages]);
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.search, filters.type, filters.ownerStatus, sortBy]);
 
-  const paginatedPackages = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredAndSortedPackages.slice(startIndex, endIndex);
-  }, [filteredAndSortedPackages, currentPage]);
-
-  const totalPages = Math.ceil(filteredAndSortedPackages.length / itemsPerPage);
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   const getPageNumbers = () => {
-    const pages = [];
+    const pages: (number | string)[] = [];
     const maxVisible = 7;
 
     if (totalPages <= maxVisible) {
@@ -137,8 +152,27 @@ export default function Packages() {
   return (
     <div className="min-h-screen bg-white">
       {/* Debian Header */}
-      <div className="bg-[#2B5672] text-white py-12 mb-8 shadow-md">
-        <div className="max-w-7xl mx-auto px-6">
+      <div className="bg-[#2B5672] text-white py-12 mb-8 shadow-md relative overflow-hidden">
+        {/* Wave patterns */}
+        <div className="absolute inset-0 opacity-10">
+          <svg
+            className="absolute top-0 left-0 w-full h-full"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,50 Q25,30 50,50 T100,50 L100,100 L0,100 Z"
+              fill="rgba(255,255,255,0.1)"
+              vectorEffect="non-scaling-stroke"
+            />
+            <path
+              d="M0,70 Q30,55 60,70 T120,70 L120,100 L0,100 Z"
+              fill="rgba(255,255,255,0.05)"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex items-center gap-4">
             <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6960528a8d3c9404917bd164/72a56a8df_Untitled-removebg-preview.png"
@@ -170,7 +204,7 @@ export default function Packages() {
                 Total Packages
               </div>
               <div className="text-4xl font-bold text-[#2B5672]">
-                {stats.total}
+                {totalCount}
               </div>
             </div>
             <div className="bg-white rounded-lg p-5 border-2 border-[#D70A53]">
@@ -178,7 +212,7 @@ export default function Packages() {
                 Without Owner
               </div>
               <div className="text-4xl font-bold text-[#D70A53]">
-                {stats.withoutOwner}
+                {withoutOwnerCount}
               </div>
             </div>
           </div>
@@ -192,7 +226,7 @@ export default function Packages() {
         />
 
         {/* Pagination Header */}
-        {filteredAndSortedPackages.length > 0 && (
+        {totalCount > 0 && (
           <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
             <div className="flex flex-wrap items-center justify-center gap-2">
               <Button
@@ -216,7 +250,7 @@ export default function Packages() {
                     key={page}
                     variant={currentPage === page ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => setCurrentPage(page as number)}
                     className={
                       currentPage === page
                         ? "bg-[#D70A53] hover:bg-[#D70A53]/90"
@@ -242,16 +276,8 @@ export default function Packages() {
               </Button>
 
               <span className="ml-4 text-sm text-slate-600">
-                (1 to{" "}
-                {Math.min(
-                  currentPage * itemsPerPage,
-                  filteredAndSortedPackages.length
-                )}
-                :{" "}
-                <span className="font-semibold">
-                  {filteredAndSortedPackages.length} total
-                </span>
-                )
+                (1 to {Math.min(currentPage * itemsPerPage, totalCount)}:{" "}
+                <span className="font-semibold">{totalCount} total</span>)
               </span>
             </div>
           </div>
@@ -262,13 +288,10 @@ export default function Packages() {
           <div className="text-sm text-slate-600">
             Showing{" "}
             <span className="font-semibold text-slate-900">
-              {paginatedPackages.length}
+              {sortedPackages.length}
             </span>{" "}
-            of{" "}
-            <span className="font-semibold">
-              {filteredAndSortedPackages.length}
-            </span>{" "}
-            package{filteredAndSortedPackages.length !== 1 ? "s" : ""}
+            of <span className="font-semibold">{totalCount}</span> package
+            {totalCount !== 1 ? "s" : ""}
           </div>
 
           <div className="flex items-center gap-2">
@@ -289,12 +312,27 @@ export default function Packages() {
           </div>
         </div>
 
+        {/* Error State */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-20"
+          >
+            <Package className="w-16 h-16 text-red-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-red-700 mb-2">
+              Error loading packages
+            </h3>
+            <p className="text-slate-500">{(error as Error).message}</p>
+          </motion.div>
+        )}
+
         {/* Package List */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#D70A53]" />
           </div>
-        ) : filteredAndSortedPackages.length === 0 ? (
+        ) : sortedPackages.length === 0 && !error ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -312,8 +350,8 @@ export default function Packages() {
               <div className="max-h-[600px] overflow-y-auto p-4">
                 <div className="grid grid-cols-1 gap-4">
                   <AnimatePresence mode="popLayout">
-                    {paginatedPackages.map((pkg) => (
-                      <PackageCard key={pkg.id} pkg={pkg} />
+                    {sortedPackages.map((pkg) => (
+                      <PackageCard key={pkg.bug_id} pkg={pkg} />
                     ))}
                   </AnimatePresence>
                 </div>
@@ -347,7 +385,7 @@ export default function Packages() {
                       key={page}
                       variant={currentPage === page ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setCurrentPage(page)}
+                      onClick={() => setCurrentPage(page as number)}
                       className={
                         currentPage === page
                           ? "bg-[#D70A53] hover:bg-[#D70A53]/90"
@@ -373,16 +411,8 @@ export default function Packages() {
                 </Button>
 
                 <span className="ml-4 text-sm text-slate-600">
-                  (1 to{" "}
-                  {Math.min(
-                    currentPage * itemsPerPage,
-                    filteredAndSortedPackages.length
-                  )}
-                  :{" "}
-                  <span className="font-semibold">
-                    {filteredAndSortedPackages.length} total
-                  </span>
-                  )
+                  (1 to {Math.min(currentPage * itemsPerPage, totalCount)}:{" "}
+                  <span className="font-semibold">{totalCount} total</span>)
                 </span>
               </div>
             </div>
