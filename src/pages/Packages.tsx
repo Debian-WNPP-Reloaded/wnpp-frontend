@@ -457,7 +457,7 @@ export default function Packages() {
                 rel="noopener noreferrer"
                 className="text-[#D70A53] hover:underline"
               >
-                Sebastian Pipping
+                GB
               </a>
               , licensed under{" "}
               <a
@@ -468,16 +468,15 @@ export default function Packages() {
               >
                 AGPL 3.0 or later
               </a>
-              . Please star{" "}
+              . Want to contribute? Go to the repository on{" "}
               <a
-                href="https://github.com/hartwork/debian-love"
+                href="https://github.com/Debian-WNPP-Reloaded"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#D70A53] hover:underline"
               >
-                the repository
-              </a>{" "}
-              on GitHub if you like this tool. Thanks!
+                GitHub
+              </a>
             </div>
           </>
         )}
