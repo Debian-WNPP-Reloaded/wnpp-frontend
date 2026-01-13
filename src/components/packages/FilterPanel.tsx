@@ -45,7 +45,7 @@ export default function FilterPanel({
     ? []
     : [filters.type];
   const hasActiveFilters =
-    filters.q || selectedTypes.length > 0 || filters.owner !== undefined;
+    filters.q || selectedTypes.length > 0 || filters.owner !== "all";
 
   const handleTypeToggle = (typeValue: WnppType) => {
     const newTypes = selectedTypes.includes(typeValue)

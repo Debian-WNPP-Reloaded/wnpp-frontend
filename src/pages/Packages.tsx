@@ -20,6 +20,7 @@ import PackageCard from "../components/packages/PackageCard";
 import FilterPanel from "../components/packages/FilterPanel";
 import { useWnppSearch, useWnppCount } from "../hooks/useWnppSearch";
 import type { WnppSearchParams } from "../types/wnpp";
+import StatSkeleton from "@/components/skeletons/StatSkeleton";
 
 export default function Packages() {
   const [filters, setFilters] = useState<WnppSearchParams>({
@@ -38,7 +39,7 @@ export default function Packages() {
     // Map 'name' to appropriate field if needed, otherwise use dust_days, installs, arrival
     const orderField = field === "name" ? "dust_days" : field; // API doesn't support name sorting
     return [
-      orderField as "dust_days" | "installs" | "arrival",
+      orderField as "lastModified" | "installs" | "arrival",
       order as "asc" | "desc",
     ];
   }, [sortBy]);
@@ -82,8 +83,11 @@ export default function Packages() {
     return params;
   }, [filters.type, filters.owner]);
 
-  const { data: totalCount = 0 } = useWnppCount(countParams);
-  const { data: withoutOwnerCount = 0 } = useWnppCount({ owner: "false" });
+  const { data: totalCount, isLoading: isTotalCountLoading } =
+    useWnppCount(countParams);
+
+  const { data: withoutOwnerCount, isLoading: isWithoutOwnerLoading } =
+    useWnppCount({ owner: "false" });
 
   // Apply client-side sorting for name (since API doesn't support it) and sort order
   const sortedPackages = useMemo(() => {
@@ -103,7 +107,7 @@ export default function Packages() {
   }, [packages, sortBy, apiSortOrder]);
 
   const handleResetFilters = () => {
-    setFilters({ q: "", type: undefined, owner: undefined });
+    setFilters({ q: "", type: undefined, owner: "all" });
     setCurrentPage(1);
   };
 
@@ -200,7 +204,7 @@ export default function Packages() {
                 Total Packages
               </div>
               <div className="text-4xl font-bold text-[#2B5672]">
-                {totalCount}
+                {isTotalCountLoading ? <StatSkeleton /> : totalCount}
               </div>
             </div>
             <div className="bg-white rounded-lg p-5 border-2 border-[#D70A53]">
@@ -208,7 +212,7 @@ export default function Packages() {
                 Without Owner
               </div>
               <div className="text-4xl font-bold text-[#D70A53]">
-                {withoutOwnerCount}
+                {isWithoutOwnerLoading ? <StatSkeleton /> : withoutOwnerCount}
               </div>
             </div>
           </div>

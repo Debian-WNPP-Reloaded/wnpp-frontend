@@ -1,6 +1,6 @@
 export type WnppType = "RFH" | "O" | "ITP" | "RFP" | "ITA" | "RFA";
 export type WnppOwner = "all" | "false" | "true";
-export type WnppOrder = "arrival" | "installs" | "dust_days";
+export type WnppOrder = "arrival" | "installs" | "lastModified";
 
 export interface WnppPackage {
   bug_id: number;
