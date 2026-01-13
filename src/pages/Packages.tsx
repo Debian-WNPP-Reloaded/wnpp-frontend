@@ -21,6 +21,8 @@ import FilterPanel from "../components/packages/FilterPanel";
 import { useWnppSearch, useWnppCount } from "../hooks/useWnppSearch";
 import type { WnppSearchParams } from "../types/wnpp";
 import StatSkeleton from "@/components/skeletons/StatSkeleton";
+import { PaginationSkeleton } from "@/components/skeletons/PaginationSkeleton";
+import { InlineCountSkeleton } from "@/components/skeletons/InlineCountSkeleton";
 
 export default function Packages() {
   const [filters, setFilters] = useState<WnppSearchParams>({
@@ -121,7 +123,7 @@ export default function Packages() {
     setCurrentPage(1);
   }, [filters.q, filters.type, filters.owner, sortBy]);*/
 
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const totalPages = totalCount ? Math.ceil(totalCount / itemsPerPage) : 0;
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
@@ -226,61 +228,76 @@ export default function Packages() {
         />
 
         {/* Pagination Header */}
-        {totalCount > 0 && (
+        {isTotalCountLoading || totalCount === undefined ? (
           <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="border-slate-300"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
-              </Button>
-
-              {getPageNumbers().map((page, idx) =>
-                page === "..." ? (
-                  <span key={`ellipsis-${idx}`} className="px-2 text-slate-500">
-                    ...
-                  </span>
-                ) : (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(page as number)}
-                    className={
-                      currentPage === page
-                        ? "bg-[#D70A53] hover:bg-[#D70A53]/90"
-                        : "border-slate-300"
-                    }
-                  >
-                    {page}
-                  </Button>
-                )
-              )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage(Math.min(totalPages, currentPage + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="border-slate-300"
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-
-              <span className="ml-4 text-sm text-slate-600">
-                (1 to {Math.min(currentPage * itemsPerPage, totalCount)}:{" "}
-                <span className="font-semibold">{totalCount} total</span>)
-              </span>
-            </div>
+            <PaginationSkeleton />
           </div>
+        ) : (
+          totalCount > 0 && (
+            <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="border-slate-300"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </Button>
+
+                {getPageNumbers().map((page, idx) =>
+                  page === "..." ? (
+                    <span
+                      key={`ellipsis-${idx}`}
+                      className="px-2 text-slate-500"
+                    >
+                      ...
+                    </span>
+                  ) : (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page as number)}
+                      className={
+                        currentPage === page
+                          ? "bg-[#D70A53] hover:bg-[#D70A53]/90"
+                          : "border-slate-300"
+                      }
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="border-slate-300"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+
+                <span className="ml-4 text-sm text-slate-600">
+                  {isTotalCountLoading ? (
+                    <InlineCountSkeleton width="12ch" />
+                  ) : (
+                    <>
+                      (1 to {Math.min(currentPage * itemsPerPage, totalCount)}:{" "}
+                      <span className="font-semibold">{totalCount} total</span>)
+                    </>
+                  )}
+                </span>
+              </div>
+            </div>
+          )
         )}
 
         {/* Sort and Results Count */}
@@ -288,10 +305,18 @@ export default function Packages() {
           <div className="text-sm text-slate-600">
             Showing{" "}
             <span className="font-semibold text-slate-900">
-              {sortedPackages.length}
+              {isLoading ? (
+                <InlineCountSkeleton width="2ch" />
+              ) : (
+                sortedPackages.length
+              )}
             </span>{" "}
-            of <span className="font-semibold">{totalCount}</span> package
-            {totalCount !== 1 ? "s" : ""}
+            of{" "}
+            <span className="font-semibold">
+              {isTotalCountLoading ? <InlineCountSkeleton /> : totalCount}
+            </span>{" "}
+            package
+            {!isTotalCountLoading && totalCount !== 1 ? "s" : ""}
           </div>
 
           <div className="flex items-center gap-2">
@@ -411,8 +436,14 @@ export default function Packages() {
                 </Button>
 
                 <span className="ml-4 text-sm text-slate-600">
-                  (1 to {Math.min(currentPage * itemsPerPage, totalCount)}:{" "}
-                  <span className="font-semibold">{totalCount} total</span>)
+                  {totalCount == undefined || isTotalCountLoading ? (
+                    <InlineCountSkeleton width="12ch" />
+                  ) : (
+                    <>
+                      (1 to {Math.min(currentPage * itemsPerPage, totalCount)}:{" "}
+                      <span className="font-semibold">{totalCount} total</span>)
+                    </>
+                  )}
                 </span>
               </div>
             </div>
