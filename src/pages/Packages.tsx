@@ -24,7 +24,7 @@ import type { WnppSearchParams } from "../types/wnpp";
 export default function Packages() {
   const [filters, setFilters] = useState<WnppSearchParams>({
     q: "",
-    type: "ALL",
+    type: undefined,
     owner: "all",
   });
 
@@ -55,7 +55,7 @@ export default function Packages() {
       params.q = filters.q;
     }
 
-    if (filters.type !== "ALL") {
+    if (filters.type) {
       params.type = filters.type;
     }
 
@@ -72,7 +72,7 @@ export default function Packages() {
   // Fetch total count for the current filters
   const countParams = useMemo(() => {
     const params: WnppSearchParams = {};
-    if (filters.type !== "ALL") {
+    if (filters.type) {
       params.type = filters.type;
     }
     if (filters.owner) {
@@ -103,7 +103,7 @@ export default function Packages() {
   }, [packages, sortBy, apiSortOrder]);
 
   const handleResetFilters = () => {
-    setFilters({ q: "", type: "ALL", owner: undefined });
+    setFilters({ q: "", type: undefined, owner: undefined });
     setCurrentPage(1);
   };
 

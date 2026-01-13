@@ -1,4 +1,4 @@
-export type WnppType = "ALL" | "O" | "ITP" | "RFP" | "ITA" | "RFA";
+export type WnppType = "RFH" | "O" | "ITP" | "RFP" | "ITA" | "RFA";
 export type WnppOwner = "all" | "false" | "true";
 export type WnppOrder = "arrival" | "installs" | "dust_days";
 

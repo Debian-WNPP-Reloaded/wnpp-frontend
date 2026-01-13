@@ -9,12 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Filter, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import type { WnppOwner, WnppSearchParams } from "@/types/wnpp";
+import { motion } from "framer-motion";
+import type { WnppOwner, WnppSearchParams, WnppType } from "@/types/wnpp";
 
-const PACKAGE_TYPES = [
+const PACKAGE_TYPES: { value: WnppType; label: string }[] = [
   { value: "RFH", label: "RFH - Request for Help" },
   { value: "ITA", label: "ITA - Intent to Adopt" },
+  { value: "ITP", label: "ITP - Intent to Package" },
   { value: "RFA", label: "RFA - Request for Adoption" },
   { value: "O", label: "O - Orphaned" },
   { value: "RFP", label: "RFP - Request for Package" },
@@ -40,17 +41,21 @@ export default function FilterPanel({
 }: FilterPanelProps) {
   const selectedTypes = Array.isArray(filters.type)
     ? filters.type
-    : filters.type === "ALL"
+    : filters.type === undefined
     ? []
     : [filters.type];
   const hasActiveFilters =
     filters.q || selectedTypes.length > 0 || filters.owner !== undefined;
 
-  const handleTypeToggle = (typeValue) => {
+  const handleTypeToggle = (typeValue: WnppType) => {
     const newTypes = selectedTypes.includes(typeValue)
       ? selectedTypes.filter((t) => t !== typeValue)
       : [...selectedTypes, typeValue];
-    setFilters({ ...filters, type: newTypes.length === 0 ? "ALL" : newTypes });
+
+    setFilters({
+      ...filters,
+      type: newTypes.length === 0 ? undefined : newTypes,
+    });
   };
 
   return (
@@ -61,28 +66,22 @@ export default function FilterPanel({
     >
       <div className="flex items-center gap-3 mb-6">
         <Filter className="w-5 h-5 text-[#D70A53]" />
+
         <h2 className="text-lg font-bold text-[#2B5672] uppercase tracking-wide">
           Filter Packages
         </h2>
-        <AnimatePresence>
-          {hasActiveFilters && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onReset}
-                className="ml-auto text-slate-500 hover:text-slate-700"
-              >
-                <X className="w-4 h-4 mr-1" />
-                Clear
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onReset}
+          className={`text-slate-500 hover:text-slate-700 ${
+            hasActiveFilters ? "" : "invisible pointer-events-none"
+          }`}
+        >
+          <X className="w-4 h-4 mr-1" />
+          Clear
+        </Button>
       </div>
 
       <div className="space-y-4">
