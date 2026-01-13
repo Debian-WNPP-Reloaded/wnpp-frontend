@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Filter, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import type { WnppOwner, WnppSearchParams } from "@/types/wnpp";
 
 const PACKAGE_TYPES = [
   { value: "RFH", label: "RFH - Request for Help" },
@@ -19,20 +20,37 @@ const PACKAGE_TYPES = [
   { value: "RFP", label: "RFP - Request for Package" },
 ];
 
-export default function FilterPanel({ filters, setFilters, onReset }) {
+function toWnppOwner(value: string): WnppOwner | undefined {
+  if (value === "true" || value === "false" || value === "all") {
+    return value;
+  }
+  return undefined;
+}
+
+interface FilterPanelProps {
+  filters: WnppSearchParams;
+  setFilters: (filters: WnppSearchParams) => void;
+  onReset: () => void;
+}
+
+export default function FilterPanel({
+  filters,
+  setFilters,
+  onReset,
+}: FilterPanelProps) {
   const selectedTypes = Array.isArray(filters.type)
     ? filters.type
-    : filters.type === "all"
+    : filters.type === "ALL"
     ? []
     : [filters.type];
   const hasActiveFilters =
-    filters.search || selectedTypes.length > 0 || filters.ownerStatus !== "all";
+    filters.q || selectedTypes.length > 0 || filters.owner !== undefined;
 
   const handleTypeToggle = (typeValue) => {
     const newTypes = selectedTypes.includes(typeValue)
       ? selectedTypes.filter((t) => t !== typeValue)
       : [...selectedTypes, typeValue];
-    setFilters({ ...filters, type: newTypes.length === 0 ? "all" : newTypes });
+    setFilters({ ...filters, type: newTypes.length === 0 ? "ALL" : newTypes });
   };
 
   return (
@@ -72,8 +90,8 @@ export default function FilterPanel({ filters, setFilters, onReset }) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search project or description..."
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            value={filters.q}
+            onChange={(e) => setFilters({ ...filters, q: e.target.value })}
             className="pl-10 border-slate-300 focus:border-[#D70A53] focus:ring-[#D70A53]/20"
           />
         </div>
@@ -108,18 +126,18 @@ export default function FilterPanel({ filters, setFilters, onReset }) {
               Owner Status
             </div>
             <Select
-              value={filters.ownerStatus}
-              onValueChange={(value) =>
-                setFilters({ ...filters, ownerStatus: value })
-              }
+              value={filters.owner}
+              onValueChange={(value) => {
+                setFilters({ ...filters, owner: toWnppOwner(value) });
+              }}
             >
               <SelectTrigger className="border-slate-300 focus:border-[#D70A53] focus:ring-[#D70A53]/20">
                 <SelectValue placeholder="Owner Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Packages</SelectItem>
-                <SelectItem value="with">With Owner</SelectItem>
-                <SelectItem value="without">Without Owner</SelectItem>
+                <SelectItem value="true">With Owner</SelectItem>
+                <SelectItem value="false">Without Owner</SelectItem>
               </SelectContent>
             </Select>
           </div>

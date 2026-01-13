@@ -11,7 +11,9 @@ export function useWnppSearch(params: WnppSearchParams) {
   });
 }
 
-export function useWnppCount(params: Pick<WnppSearchParams, "type"> = {}) {
+export function useWnppCount(
+  params: Pick<WnppSearchParams, "type" | "owner"> = {}
+) {
   return useQuery({
     queryKey: ["wnpp-count", params],
     queryFn: () => countWnpp(params),

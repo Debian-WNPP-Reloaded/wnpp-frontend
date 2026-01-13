@@ -1,4 +1,3 @@
-// src/api/wnpp.ts
 import { api } from "./client";
 import type {
   WnppPackage,
@@ -18,8 +17,8 @@ function buildQueryString(params: WnppSearchParams): string {
     types.forEach((t) => searchParams.append("type", t));
   }
 
-  if (params.owner !== undefined) {
-    searchParams.append("owner", params.owner.toString());
+  if (params.owner && params.owner !== "all") {
+    searchParams.append("owner", params.owner);
   }
 
   if (params.order) {

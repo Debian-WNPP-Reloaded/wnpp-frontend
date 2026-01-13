@@ -1,5 +1,6 @@
-// src/types/wnpp.ts
-export type WnppType = "O" | "ITP" | "RFP" | "ITA" | "RFA";
+export type WnppType = "ALL" | "O" | "ITP" | "RFP" | "ITA" | "RFA";
+export type WnppOwner = "all" | "false" | "true";
+export type WnppOrder = "arrival" | "installs" | "dust_days";
 
 export interface WnppPackage {
   bug_id: number;
@@ -20,8 +21,8 @@ export interface WnppPackage {
 export interface WnppSearchParams {
   q?: string;
   type?: WnppType | WnppType[];
-  owner?: boolean;
-  order?: "arrival" | "installs" | "dust_days";
+  owner?: WnppOwner;
+  order?: WnppOrder;
   limit?: number;
   offset?: number;
 }

@@ -1,5 +1,5 @@
 // src/pages/Packages.tsx
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -19,13 +19,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import PackageCard from "../components/packages/PackageCard";
 import FilterPanel from "../components/packages/FilterPanel";
 import { useWnppSearch, useWnppCount } from "../hooks/useWnppSearch";
-import type { WnppType } from "../types/wnpp";
+import type { WnppSearchParams } from "../types/wnpp";
 
 export default function Packages() {
-  const [filters, setFilters] = useState({
-    search: "",
-    type: "all" as "all" | WnppType | WnppType[],
-    ownerStatus: "all" as "all" | "with" | "without",
+  const [filters, setFilters] = useState<WnppSearchParams>({
+    q: "",
+    type: "ALL",
+    owner: "all",
   });
 
   const [sortBy, setSortBy] = useState("dust_days_desc");
@@ -45,58 +45,49 @@ export default function Packages() {
 
   // Build API params
   const apiParams = useMemo(() => {
-    const params: any = {
+    const params: WnppSearchParams = {
       limit: itemsPerPage,
       offset: (currentPage - 1) * itemsPerPage,
       order: apiOrder,
     };
 
-    if (filters.search) {
-      params.q = filters.search;
+    if (filters.q) {
+      params.q = filters.q;
     }
 
-    if (filters.type !== "all") {
+    if (filters.type !== "ALL") {
       params.type = filters.type;
     }
 
-    if (filters.ownerStatus === "with") {
-      params.owner = true;
-    } else if (filters.ownerStatus === "without") {
-      params.owner = false;
+    if (filters.owner) {
+      params.owner = filters.owner;
     }
 
     return params;
-  }, [
-    filters.search,
-    filters.type,
-    filters.ownerStatus,
-    currentPage,
-    apiOrder,
-  ]);
+  }, [filters.q, filters.type, filters.owner, currentPage, apiOrder]);
 
   // Fetch packages
   const { data: packages = [], isLoading, error } = useWnppSearch(apiParams);
 
   // Fetch total count for the current filters
   const countParams = useMemo(() => {
-    const params: any = {};
-    if (filters.type !== "all") {
+    const params: WnppSearchParams = {};
+    if (filters.type !== "ALL") {
       params.type = filters.type;
     }
-    if (filters.ownerStatus === "with") {
-      params.owner = true;
-    } else if (filters.ownerStatus === "without") {
-      params.owner = false;
+    if (filters.owner) {
+      params.owner = filters.owner;
     }
+
     return params;
-  }, [filters.type, filters.ownerStatus]);
+  }, [filters.type, filters.owner]);
 
   const { data: totalCount = 0 } = useWnppCount(countParams);
-  const { data: withoutOwnerCount = 0 } = useWnppCount({ owner: false });
+  const { data: withoutOwnerCount = 0 } = useWnppCount({ owner: "false" });
 
   // Apply client-side sorting for name (since API doesn't support it) and sort order
   const sortedPackages = useMemo(() => {
-    let result = [...packages];
+    const result = [...packages];
 
     // If sorting by name, do it client-side
     if (sortBy === "name_asc") {
@@ -112,14 +103,19 @@ export default function Packages() {
   }, [packages, sortBy, apiSortOrder]);
 
   const handleResetFilters = () => {
-    setFilters({ search: "", type: "all", ownerStatus: "all" });
+    setFilters({ q: "", type: "ALL", owner: undefined });
+    setCurrentPage(1);
+  };
+
+  const handleFiltersChange = (filters: WnppSearchParams) => {
+    setFilters(filters);
     setCurrentPage(1);
   };
 
   // Reset to page 1 when filters change
-  useEffect(() => {
+  /*useEffect(() => {
     setCurrentPage(1);
-  }, [filters.search, filters.type, filters.ownerStatus, sortBy]);
+  }, [filters.q, filters.type, filters.owner, sortBy]);*/
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
@@ -221,7 +217,7 @@ export default function Packages() {
         {/* Filters */}
         <FilterPanel
           filters={filters}
-          setFilters={setFilters}
+          setFilters={handleFiltersChange}
           onReset={handleResetFilters}
         />
 
