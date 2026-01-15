@@ -484,7 +484,7 @@ export default function Packages() {
             </div>
 
             <div className="mt-8 text-center text-sm text-slate-600 border-t border-slate-200 pt-6">
-              Written by{" "}
+              Made by{" "}
               <a
                 href="https://github.com/hartwork"
                 target="_blank"
