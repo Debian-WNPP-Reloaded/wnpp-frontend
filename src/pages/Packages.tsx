@@ -1,5 +1,5 @@
 // src/pages/Packages.tsx
-import { useState, useMemo } from "react";
+import { useState, useMemo, startTransition, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -34,6 +34,8 @@ export default function Packages() {
   const [sortBy, setSortBy] = useState("installs_desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
+
+  const [isPending, startTransition] = useTransition();
 
   const [apiOrder, apiSortOrder] = useMemo(() => {
     let order: WnppOrder;
@@ -110,7 +112,11 @@ export default function Packages() {
   ]);
 
   // Fetch packages
-  const { data: packages = [], isLoading, error } = useWnppSearch(apiParams);
+  const {
+    data: packages = [],
+    isLoading: loa,
+    error,
+  } = useWnppSearch(apiParams);
 
   // Fetch total count for the current filters
   const countParams = useMemo(() => {
@@ -137,8 +143,13 @@ export default function Packages() {
   };
 
   const handleFiltersChange = (filters: WnppSearchParams) => {
-    setFilters(filters);
-    setCurrentPage(1);
+    startTransition(() => {
+      setFilters(filters);
+      setCurrentPage(1);
+    });
+
+    //setFilters(filters);
+    //setCurrentPage(1);
   };
 
   const handleOrderChange = (sortBy: string) => {
@@ -333,7 +344,7 @@ export default function Packages() {
           <div className="text-sm text-slate-600">
             Showing{" "}
             <span className="font-semibold text-slate-900">
-              {isLoading ? (
+              {isPending || loa ? (
                 <InlineCountSkeleton width="2ch" />
               ) : (
                 packages.length
@@ -388,7 +399,7 @@ export default function Packages() {
         )}
 
         {/* Package List */}
-        {isLoading ? (
+        {isPending || loa ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#D70A53]" />
           </div>

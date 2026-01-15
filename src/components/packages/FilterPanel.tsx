@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Filter, X } from "lucide-react";
 import { motion } from "framer-motion";
 import type { WnppOwner, WnppSearchParams, WnppType } from "@/types/wnpp";
+import { useState } from "react";
 
 const PACKAGE_TYPES: { value: WnppType; label: string }[] = [
   { value: "RFH", label: "RFH - Request for Help" },
@@ -39,6 +40,8 @@ export default function FilterPanel({
   setFilters,
   onReset,
 }: FilterPanelProps) {
+  const [localFilters, setLocalFilters] = useState<WnppSearchParams>(filters);
+
   const selectedTypes = Array.isArray(filters.type)
     ? filters.type
     : filters.type === undefined
@@ -125,8 +128,9 @@ export default function FilterPanel({
               Owner Status
             </div>
             <Select
-              value={filters.owner}
+              value={localFilters.owner}
               onValueChange={(value) => {
+                setLocalFilters({ ...localFilters, owner: toWnppOwner(value) });
                 setFilters({ ...filters, owner: toWnppOwner(value) });
               }}
             >
