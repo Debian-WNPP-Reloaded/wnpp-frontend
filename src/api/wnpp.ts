@@ -25,6 +25,10 @@ function buildQueryString(params: WnppSearchParams): string {
     searchParams.append("order", params.order);
   }
 
+  if (params.direction) {
+    searchParams.append("direction", params.direction);
+  }
+
   if (params.limit !== undefined) {
     searchParams.append("limit", params.limit.toString());
   }

@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PackageCard from "../components/packages/PackageCard";
 import FilterPanel from "../components/packages/FilterPanel";
 import { useWnppSearch, useWnppCount } from "../hooks/useWnppSearch";
-import type { WnppSearchParams } from "../types/wnpp";
+import type { WnppDirection, WnppOrder, WnppSearchParams } from "../types/wnpp";
 import StatSkeleton from "@/components/skeletons/StatSkeleton";
 import { PaginationSkeleton } from "@/components/skeletons/PaginationSkeleton";
 import { InlineCountSkeleton } from "@/components/skeletons/InlineCountSkeleton";
@@ -31,19 +31,51 @@ export default function Packages() {
     owner: "all",
   });
 
-  const [sortBy, setSortBy] = useState("dust_days_desc");
+  const [sortBy, setSortBy] = useState("installs_desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
-  // Map sort value to API parameters
   const [apiOrder, apiSortOrder] = useMemo(() => {
-    const [field, order] = sortBy.split("_");
-    // Map 'name' to appropriate field if needed, otherwise use dust_days, installs, arrival
-    const orderField = field === "name" ? "dust_days" : field; // API doesn't support name sorting
-    return [
-      orderField as "lastModified" | "installs" | "arrival",
-      order as "asc" | "desc",
-    ];
+    let order: WnppOrder;
+    let direction: WnppDirection;
+
+    switch (sortBy) {
+      case "arrival_asc":
+        order = "arrival";
+        direction = "asc";
+        break;
+
+      case "arrival_desc":
+        order = "arrival";
+        direction = "desc";
+        break;
+
+      case "last_modified_asc":
+        order = "last_modified";
+        direction = "asc";
+        break;
+
+      case "last_modified_desc":
+        order = "last_modified";
+        direction = "desc";
+        break;
+
+      case "installs_asc":
+        order = "installs";
+        direction = "asc";
+        break;
+
+      case "installs_desc":
+        order = "installs";
+        direction = "desc";
+        break;
+
+      default:
+        order = "last_modified";
+        direction = "desc";
+    }
+
+    return [order, direction];
   }, [sortBy]);
 
   // Build API params
@@ -52,6 +84,7 @@ export default function Packages() {
       limit: itemsPerPage,
       offset: (currentPage - 1) * itemsPerPage,
       order: apiOrder,
+      direction: apiSortOrder,
     };
 
     if (filters.q) {
@@ -67,7 +100,14 @@ export default function Packages() {
     }
 
     return params;
-  }, [filters.q, filters.type, filters.owner, currentPage, apiOrder]);
+  }, [
+    filters.q,
+    filters.type,
+    filters.owner,
+    currentPage,
+    apiOrder,
+    apiSortOrder,
+  ]);
 
   // Fetch packages
   const { data: packages = [], isLoading, error } = useWnppSearch(apiParams);
@@ -326,12 +366,16 @@ export default function Packages() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="dust_days_desc">Oldest First</SelectItem>
-                <SelectItem value="dust_days_asc">Newest First</SelectItem>
+                <SelectItem value="arrival_asc">Oldest First</SelectItem>
+                <SelectItem value="arrival_desc">Newest First</SelectItem>
                 <SelectItem value="installs_desc">Most Installs</SelectItem>
                 <SelectItem value="installs_asc">Least Installs</SelectItem>
-                <SelectItem value="name_asc">Name (A-Z)</SelectItem>
-                <SelectItem value="name_desc">Name (Z-A)</SelectItem>
+                <SelectItem value="last_modified_desc">
+                  Dustiest Last
+                </SelectItem>
+                <SelectItem value="last_modified_asc">
+                  Dustiest First
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

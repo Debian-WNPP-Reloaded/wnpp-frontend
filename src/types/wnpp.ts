@@ -1,6 +1,7 @@
 export type WnppType = "RFH" | "O" | "ITP" | "RFP" | "ITA" | "RFA";
 export type WnppOwner = "all" | "false" | "true";
-export type WnppOrder = "arrival" | "installs" | "lastModified";
+export type WnppOrder = "arrival" | "installs" | "last_modified";
+export type WnppDirection = "desc" | "asc";
 
 export interface WnppPackage {
   bug_id: number;
@@ -23,6 +24,7 @@ export interface WnppSearchParams {
   type?: WnppType | WnppType[];
   owner?: WnppOwner;
   order?: WnppOrder;
+  direction?: WnppDirection;
   limit?: number;
   offset?: number;
 }
