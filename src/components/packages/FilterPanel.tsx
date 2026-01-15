@@ -65,7 +65,7 @@ export default function FilterPanel({
   };
 
   const handleOnClear = () => {
-    setLocalFilters({ owner: "all" });
+    setLocalFilters({ type: [], q: "", owner: "all" });
 
     setTypes([]);
 
@@ -105,8 +105,11 @@ export default function FilterPanel({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search project or description..."
-            value={filters.q}
-            onChange={(e) => setFilters({ ...filters, q: e.target.value })}
+            value={localFilters.q}
+            onChange={(e) => {
+              setLocalFilters({ ...localFilters, q: e.target.value });
+              setFilters({ ...filters, q: e.target.value });
+            }}
             className="pl-10 border-slate-300 focus:border-[#D70A53] focus:ring-[#D70A53]/20"
           />
         </div>
