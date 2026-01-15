@@ -159,6 +159,12 @@ export default function Packages() {
     setCurrentPage(1);
   };
 
+  const handlePageChange = (page: number) => {
+    startTransition(() => {
+      setCurrentPage(page);
+    });
+  };
+
   // Reset to page 1 when filters change
   /*useEffect(() => {
     setCurrentPage(1);
@@ -280,7 +286,7 @@ export default function Packages() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="border-slate-300"
                 >
@@ -301,7 +307,7 @@ export default function Packages() {
                       key={page}
                       variant={currentPage === page ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setCurrentPage(page as number)}
+                      onClick={() => handlePageChange(page as number)}
                       className={
                         currentPage === page
                           ? "bg-[#D70A53] hover:bg-[#D70A53]/90"
@@ -317,7 +323,7 @@ export default function Packages() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                    handlePageChange(Math.min(totalPages, currentPage + 1))
                   }
                   disabled={currentPage === totalPages}
                   className="border-slate-300"
@@ -437,7 +443,7 @@ export default function Packages() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="border-slate-300"
                 >
@@ -458,7 +464,7 @@ export default function Packages() {
                       key={page}
                       variant={currentPage === page ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setCurrentPage(page as number)}
+                      onClick={() => handlePageChange(page as number)}
                       className={
                         currentPage === page
                           ? "bg-[#D70A53] hover:bg-[#D70A53]/90"
@@ -474,7 +480,7 @@ export default function Packages() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                    handlePageChange(Math.min(totalPages, currentPage + 1))
                   }
                   disabled={currentPage === totalPages}
                   className="border-slate-300"
