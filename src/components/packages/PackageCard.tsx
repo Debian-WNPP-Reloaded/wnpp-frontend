@@ -9,6 +9,7 @@ import {
 import { Users, Calendar, Download, Package, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import type { WnppPackage } from "@/types/wnpp";
+import { formatDistanceToNow } from "date-fns";
 
 const typeColors = {
   RFH: "bg-red-50 text-[#D70A53] border-[#D70A53]",
@@ -34,20 +35,20 @@ const priorityColors = {
   low: "border-l-slate-300",
 };
 
+function formatDate(date: string | Date) {
+  return new Date(date).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 interface PackageCardProps {
   pkg: WnppPackage;
 }
 
 export default function PackageCard({ pkg }: PackageCardProps) {
   const hasOwner = pkg.owner && pkg.owner !== "nobody";
-
-  // Calculate days since arrival
-  const daysSinceArrival = pkg.arrival
-    ? Math.floor(
-        (new Date().getTime() - new Date(pkg.arrival).getTime()) /
-          (1000 * 60 * 60 * 24)
-      )
-    : null;
 
   // Determine priority based on installs or type
   const getPriority = () => {
@@ -89,19 +90,20 @@ export default function PackageCard({ pkg }: PackageCardProps) {
 
             <TooltipProvider>
               <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
-                {daysSinceArrival !== null && (
+                {pkg.arrival !== null && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-4 h-4" />
                         <span>
-                          {daysSinceArrival} day
-                          {daysSinceArrival !== 1 ? "s" : ""}
+                          {formatDistanceToNow(new Date(pkg.arrival), {
+                            addSuffix: true,
+                          })}
                         </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Days since arrival</p>
+                      <p>Arrived on {formatDate(pkg.arrival)}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -142,17 +144,14 @@ export default function PackageCard({ pkg }: PackageCardProps) {
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4" />
                         <span>
-                          {Math.floor(
-                            (new Date().getTime() -
-                              new Date(pkg.last_modified).getTime()) /
-                              (1000 * 60 * 60 * 24)
-                          )}{" "}
-                          day{daysSinceArrival !== 1 ? "s" : ""} ago
+                          {formatDistanceToNow(new Date(pkg.last_modified), {
+                            addSuffix: true,
+                          })}
                         </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Last modified</p>
+                      <p>Last modified on {formatDate(pkg.last_modified)}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
