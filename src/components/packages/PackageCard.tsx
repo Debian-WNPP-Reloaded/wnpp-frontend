@@ -94,7 +94,10 @@ export default function PackageCard({ pkg }: PackageCardProps) {
                     <TooltipTrigger asChild>
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-4 h-4" />
-                        <span>{daysSinceArrival} days</span>
+                        <span>
+                          {daysSinceArrival} day
+                          {daysSinceArrival !== 1 ? "s" : ""}
+                        </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -144,7 +147,7 @@ export default function PackageCard({ pkg }: PackageCardProps) {
                               new Date(pkg.last_modified).getTime()) /
                               (1000 * 60 * 60 * 24)
                           )}{" "}
-                          days ago
+                          day{daysSinceArrival !== 1 ? "s" : ""} ago
                         </span>
                       </div>
                     </TooltipTrigger>
