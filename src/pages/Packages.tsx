@@ -131,23 +131,6 @@ export default function Packages() {
   const { data: withoutOwnerCount, isLoading: isWithoutOwnerLoading } =
     useWnppCount({ owner: "false" });
 
-  // Apply client-side sorting for name (since API doesn't support it) and sort order
-  const sortedPackages = useMemo(() => {
-    const result = [...packages];
-
-    // If sorting by name, do it client-side
-    if (sortBy === "name_asc") {
-      result.sort((a, b) => (a.source || "").localeCompare(b.source || ""));
-    } else if (sortBy === "name_desc") {
-      result.sort((a, b) => (b.source || "").localeCompare(a.source || ""));
-    } else if (apiSortOrder === "asc") {
-      // Reverse for ascending order (API returns descending by default)
-      result.reverse();
-    }
-
-    return result;
-  }, [packages, sortBy, apiSortOrder]);
-
   const handleResetFilters = () => {
     setFilters({ q: "", type: undefined, owner: "all" });
     setCurrentPage(1);
@@ -348,7 +331,7 @@ export default function Packages() {
               {isLoading ? (
                 <InlineCountSkeleton width="2ch" />
               ) : (
-                sortedPackages.length
+                packages.length
               )}
             </span>{" "}
             of{" "}
@@ -401,7 +384,7 @@ export default function Packages() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#D70A53]" />
           </div>
-        ) : sortedPackages.length === 0 && !error ? (
+        ) : packages.length === 0 && !error ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -419,7 +402,7 @@ export default function Packages() {
               <div className="max-h-[600px] overflow-y-auto p-4">
                 <div className="grid grid-cols-1 gap-4">
                   <AnimatePresence mode="popLayout">
-                    {sortedPackages.map((pkg) => (
+                    {packages.map((pkg) => (
                       <PackageCard key={pkg.bug_id} pkg={pkg} />
                     ))}
                   </AnimatePresence>
@@ -492,7 +475,6 @@ export default function Packages() {
               </div>
             </div>
 
-            {/* Author Credit */}
             <div className="mt-8 text-center text-sm text-slate-600 border-t border-slate-200 pt-6">
               Written by{" "}
               <a
