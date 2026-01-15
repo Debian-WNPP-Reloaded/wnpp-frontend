@@ -141,6 +141,11 @@ export default function Packages() {
     setCurrentPage(1);
   };
 
+  const handleOrderChange = (sortBy: string) => {
+    setSortBy(sortBy);
+    setCurrentPage(1);
+  };
+
   // Reset to page 1 when filters change
   /*useEffect(() => {
     setCurrentPage(1);
@@ -344,7 +349,10 @@ export default function Packages() {
 
           <div className="flex items-center gap-2">
             <ArrowUpDown className="w-4 h-4 text-slate-400" />
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select
+              value={sortBy}
+              onValueChange={(value: string) => handleOrderChange(value)}
+            >
               <SelectTrigger className="w-48 border-slate-200">
                 <SelectValue />
               </SelectTrigger>
