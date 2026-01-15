@@ -20,11 +20,11 @@ const typeColors = {
 };
 
 const typeLabels = {
-  RFH: "Request for Help",
-  ITA: "Intent to Adopt",
-  RFA: "Request for Adoption",
   O: "Orphaned",
+  RFA: "Request for Adoption",
+  RFH: "Request for Help",
   RFP: "Request for Package",
+  ITA: "Intent to Adopt",
   ITP: "Intent to Package",
 };
 

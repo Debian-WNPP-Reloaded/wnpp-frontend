@@ -1,5 +1,5 @@
 // src/pages/Packages.tsx
-import { useState, useMemo, startTransition, useTransition } from "react";
+import { useState, useMemo, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -31,7 +31,7 @@ export default function Packages() {
     owner: "all",
   });
 
-  const [sortBy, setSortBy] = useState("installs_desc");
+  const [sortBy, setSortBy] = useState("arrival_desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
@@ -138,8 +138,10 @@ export default function Packages() {
     useWnppCount({ owner: "false" });
 
   const handleResetFilters = () => {
-    setFilters({ q: "", type: undefined, owner: "all" });
-    setCurrentPage(1);
+    startTransition(() => {
+      setFilters({ q: "", type: undefined, owner: "all" });
+      setCurrentPage(1);
+    });
   };
 
   const handleFiltersChange = (filters: WnppSearchParams) => {

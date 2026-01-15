@@ -14,12 +14,12 @@ import type { WnppOwner, WnppSearchParams, WnppType } from "@/types/wnpp";
 import { useState } from "react";
 
 const PACKAGE_TYPES: { value: WnppType; label: string }[] = [
+  { value: "O", label: "O - Orphaned" },
+  { value: "RFA", label: "RFA - Request for Adoption" },
   { value: "RFH", label: "RFH - Request for Help" },
+  { value: "RFP", label: "RFP - Request for Package" },
   { value: "ITA", label: "ITA - Intent to Adopt" },
   { value: "ITP", label: "ITP - Intent to Package" },
-  { value: "RFA", label: "RFA - Request for Adoption" },
-  { value: "O", label: "O - Orphaned" },
-  { value: "RFP", label: "RFP - Request for Package" },
 ];
 
 function toWnppOwner(value: string): WnppOwner | undefined {
@@ -41,6 +41,7 @@ export default function FilterPanel({
   onReset,
 }: FilterPanelProps) {
   const [localFilters, setLocalFilters] = useState<WnppSearchParams>(filters);
+  const [types, setTypes] = useState<WnppType[]>([]);
 
   const selectedTypes = Array.isArray(filters.type)
     ? filters.type
@@ -51,14 +52,24 @@ export default function FilterPanel({
     filters.q || selectedTypes.length > 0 || filters.owner !== "all";
 
   const handleTypeToggle = (typeValue: WnppType) => {
-    const newTypes = selectedTypes.includes(typeValue)
-      ? selectedTypes.filter((t) => t !== typeValue)
-      : [...selectedTypes, typeValue];
+    const newTypes = types.includes(typeValue)
+      ? types.filter((t) => t !== typeValue)
+      : [...types, typeValue];
+
+    setTypes(newTypes);
 
     setFilters({
       ...filters,
       type: newTypes.length === 0 ? undefined : newTypes,
     });
+  };
+
+  const handleOnClear = () => {
+    setLocalFilters({ owner: "all" });
+
+    setTypes([]);
+
+    onReset();
   };
 
   return (
@@ -77,7 +88,9 @@ export default function FilterPanel({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onReset}
+          onClick={() => {
+            handleOnClear();
+          }}
           className={`text-slate-500 hover:text-slate-700 ${
             hasActiveFilters ? "" : "invisible pointer-events-none"
           }`}
@@ -108,7 +121,7 @@ export default function FilterPanel({
                 <div key={type.value} className="flex items-center space-x-2">
                   <Checkbox
                     id={type.value}
-                    checked={selectedTypes.includes(type.value)}
+                    checked={types.includes(type.value)}
                     onCheckedChange={() => handleTypeToggle(type.value)}
                     className="border-slate-300"
                   />
