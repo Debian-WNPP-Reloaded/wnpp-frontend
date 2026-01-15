@@ -31,7 +31,7 @@ export default function Packages() {
     owner: "all",
   });
 
-  const [sortBy, setSortBy] = useState("arrival_desc");
+  const [sortBy, setSortBy] = useState("arrival_asc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
 
@@ -131,10 +131,10 @@ export default function Packages() {
     return params;
   }, [filters.type, filters.owner]);
 
-  const { data: totalCount, isLoading: isTotalCountLoading } =
+  const { data: totalCount, isFetching: isTotalCountLoading } =
     useWnppCount(countParams);
 
-  const { data: withoutOwnerCount, isLoading: isWithoutOwnerLoading } =
+  const { data: withoutOwnerCount, isFetching: isWithoutOwnerLoading } =
     useWnppCount({ owner: "false" });
 
   const handleResetFilters = () => {
